@@ -62,70 +62,92 @@ void displayDialogue(istream & in, int player, int &rowSource, int &columnSource
 
 }
 
-void move(int rowSource, int columnSource, int rowDestination, int columnDestination, int &success, char board[8][8], int &player) {
-  if (player == 1) {
-    if (board[rowSource][columnSource] == 'b') {
-      if (columnSource == 0 && columnDestination - columnSource == 1){
-        success = 1;
-        player = 0;
-        board[rowSource][columnSource] = ' ';
-        board[rowDestination][columnDestination] = 'b';
-      }
-      else if (columnSource == 7 && columnSource - columnDestination == 1){
-        success = 1;
-        player = 0;
-        board[rowSource][columnSource] = ' ';
-        board[rowDestination][columnDestination] = 'b';
-      }
-      else if (columnSource != 0 && columnSource != 7 && abs (columnDestination - columnSource) == 1) {
-        if (rowDestination - rowSource == 1) {
-          success = 1;
-          player = 0;
-          board[rowSource][columnSource] = ' ';
-          board[rowDestination][columnDestination] = 'b';
-        }
-        else {
-          success = 0;
-        }
-      }
-      else {
-        success = 0;
-      }
-    }
-    else {
-      success = 0;
-    }
+void verify_contains_piece(int rowSource, int columnSource, char board[8][8], int &player, int &success) {
+  if (player == 1 && board[rowSource][columnSource] == 'b') {
+    success = 1;
   }
-
+  else if (player == 0 && board[rowSource][columnSource] == 'r') {
+    success = 1;
+  }
   else {
-    if (board[rowSource][columnSource] == 'r') {
-      if (abs (columnDestination - columnSource) == 1) {
-        if (columnSource == 0 && columnDestination - columnSource == 1){
-          success = 1;
-          player = 1;
-          board[rowSource][columnSource] = ' ';
-          board[rowDestination][columnDestination] = 'r';
-        }
-        else if (columnSource == 7 && columnSource - columnDestination == 1){
-          success = 1;
-          player = 1;
-          board[rowSource][columnSource] = ' ';
-          board[rowDestination][columnDestination] = 'r';
-        }
-        else if (rowSource - rowDestination == 1) {
-          success = 1;
-          player = 1;
-          board[rowSource][columnSource] = ' ';
-          board[rowDestination][columnDestination] = 'r';
-        }
-      }
-      else if (columnDestination == columnSource) {
-        success = 0;
-      }
-    }
-    else {
-      success = 0;
-    }
+    success = 0;
+  }
+}
+
+void verify_forward_move(int rowSource, int rowDestination, int &player, int &success) {
+  if (player == 1 && rowDestination - rowSource == 1) {
+    success = 1;
+  }
+  else if (player == 0 && rowSource - rowDestination == 1) {
+    success = 1;
+  }
+  else {
+    success = 0;
+  }
+}
+
+void verify_diagonal_move(int columnSource, int columnDestination, int &success) {
+  if (columnSource == 0 && columnDestination - columnSource == 1) {
+    success =1;
+  }
+  else if (columnSource == 7 && columnSource - columnDestination == 1) {
+    success = 1;
+  }
+  else if (columnSource > 0 && columnSource < 7 && abs(columnSource - columnDestination) == 1) {
+    success = 1;
+  }
+  else {
+    success = 0;
+  }
+}
+
+void verify_empty_destination(int rowDestination, int columnDestination, char board[8][8], int &success) {
+  if (board[rowDestination][columnDestination] == ' ') {
+    success = 1;
+  }
+  else {
+    success = 0;
+  }
+}
+
+/*
+void verify_opponent_capture() {
+
+}
+*/
+
+void switch_players(int &player) {
+  if (player == 1) {
+    player = 0;
+  }
+  else {
+    player = 1;
+  }
+}
+
+void update_board(int rowSource, int columnSource, int rowDestination, int columnDestination, char board[8][8], int &player) {
+  if (player == 1) {
+    board[rowSource][columnSource] = ' ';
+    board[rowDestination][columnDestination] = 'b';
+  }
+  else {
+    board[rowSource][columnSource] = ' ';
+    board[rowDestination][columnDestination] = 'r';
+  }
+}
+
+void move(int rowSource, int columnSource, int rowDestination, int columnDestination, int &success, char board[8][8], int &player) {
+  verify_contains_piece(rowSource, columnSource, board, player, success);
+  verify_forward_move(rowSource, rowDestination, player, success);
+  verify_diagonal_move(columnSource, columnDestination, success);
+  verify_empty_destination(rowDestination, columnDestination, board, success);
+
+  if (success == 1) {
+    update_board(rowSource, columnSource, rowDestination, columnDestination, board, player);
+    switch_players(player);
+  }
+  else {
+    cout << "Illegal Move!" << endl;
   }
 
 }
@@ -157,7 +179,8 @@ int main() {
     displayBoard(cout, board);
   }
   else {
-    cout << "Illegal Move!" << endl;
+    displayDialogue(cin, player, rowSource, columnSource, rowDestination, columnDestination);
+    move(rowSource, columnSource, rowDestination, columnDestination, success, board, player);
   }
 
   displayDialogue(cin, player, rowSource, columnSource, rowDestination, columnDestination);
@@ -167,7 +190,8 @@ int main() {
     displayBoard(cout, board);
   }
   else {
-    cout << "Illegal Move!" << endl;
+    displayDialogue(cin, player, rowSource, columnSource, rowDestination, columnDestination);
+    move(rowSource, columnSource, rowDestination, columnDestination, success, board, player);
   }
 
   return 0;
